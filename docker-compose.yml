@@ -1,0 +1,32 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: campusconnect
+      MYSQL_ROOT_PASSWORD: campusconnect
+    ports:
+      - "3307:3306"
+    volumes:
+      - campusconnect_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-pcampusconnect"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: jdbc:mysql://mysql:3306/campusconnect?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DATABASE_USERNAME: root
+      DATABASE_PASSWORD: campusconnect
+      JWT_SECRET: local-dev-only-secret-use-a-long-random-key-before-deploying
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  campusconnect_data:
